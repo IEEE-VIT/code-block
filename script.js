@@ -377,3 +377,54 @@ document.getElementById('snippets-grid').addEventListener('click', (e) => {
   const code = snippetCard.querySelector('pre') ? snippetCard.querySelector('pre').textContent : '';
   if(code) openPreview(code);
 });
+
+
+javascript
+document.addEventListener('DOMContentLoaded', function() {
+  const snippetsGrid = document.getElementById('snippets-grid');
+  let draggedIndex = null;
+
+  snippetsGrid.addEventListener('dragstart', (e) => {
+    if (e.target.classList.contains('snippet-card')) {
+      draggedIndex = Array.from(snippetsGrid.children).indexOf(e.target);
+      e.dataTransfer.effectAllowed = 'move';
+    }
+  });
+
+  snippetsGrid.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    const target = e.target.closest('.snippet-card');
+    if (!target || target === snippetsGrid.children[draggedIndex]) return;
+    const targetIndex = Array.from(snippetsGrid.children).indexOf(target);
+    if (targetIndex > draggedIndex) {
+      snippetsGrid.insertBefore(snippetsGrid.children[draggedIndex], target.nextSibling);
+    } else {
+      snippetsGrid.insertBefore(snippetsGrid.children[draggedIndex], target);
+    }
+  });
+
+  snippetsGrid.addEventListener('drop', (e) => {
+    e.preventDefault();
+    draggedIndex = null;
+    saveOrder();
+  });
+
+  function saveOrder() {
+    const order = [];
+    snippetsGrid.querySelectorAll('.snippet-card').forEach(card => {
+      order.push(card.getAttribute('data-id'));
+    });
+    localStorage.setItem('snippetsOrder', JSON.stringify(order));
+  }
+
+  function loadOrder() {
+    const order = JSON.parse(localStorage.getItem('snippetsOrder'));
+    if (!order) return;
+    order.forEach(id => {
+      const card = snippetsGrid.querySelector(`.snippet-card[data-id="${id}"]`);
+      if (card) snippetsGrid.appendChild(card);
+    });
+  }
+
+  loadOrder();
+});
