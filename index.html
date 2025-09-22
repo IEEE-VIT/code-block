@@ -116,3 +116,24 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </body>
 </html>
+
+.snippets-grid pre {
+  overflow-x: auto;
+  white-space: pre;
+  max-width: 100%;
+  display: block;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+<div class="modal-overlay" id="preview-modal-overlay" style="display:none;">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Code Preview</h2>
+      <button class="close-modal" id="close-preview-modal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <pre id="preview-code" class="hljs"></pre>
+    </div>
+  </div>
+</div>

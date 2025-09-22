@@ -535,3 +535,29 @@ textarea {
   background-color: #28a745; /* Green color for success feedback */
   opacity: 1;
 }
+
+#preview-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+#preview-modal-overlay .modal {
+  background: var(--background-color);
+  max-width: 90%;
+  max-height: 80%;
+  overflow: auto;
+  border-radius: 8px;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+#preview-code {
+  white-space: pre;
+  overflow-x: auto;
+  max-width: 100%;
+}
