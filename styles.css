@@ -338,15 +338,18 @@ h1 {
   overflow: auto;
 }
 
-.snippet-code {
+.snippet-content pre,
+.snippet-content pre code {
+  white-space: pre;          /* Do not wrap long lines */
+  overflow-x: auto;          /* Show horizontal scroll if needed */
+  display: block;            /* Ensure scroll works */
+  max-width: 100%;           /* Limit to card width */
+  padding: 1rem;             /* Space inside code block */
   background-color: var(--bg-primary);
-  padding: 1rem;
-  border-radius: 4px;
-  font-family: 'Courier New', Courier, monospace;
-  white-space: pre-wrap;
-  overflow-x: auto;
-  max-height: 200px;
+  border-radius: 4px;        /* Rounded corners */
+  font-family: 'Courier New', Courier, monospace; /* Monospace font */
   font-size: 0.9rem;
+  max-height: 200px;         /* Optional vertical scroll */
 }
 
 .snippet-actions {
