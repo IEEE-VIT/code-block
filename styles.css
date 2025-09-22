@@ -561,3 +561,9 @@ textarea {
   overflow-x: auto;
   max-width: 100%;
 }
+
+
+.snippet-card {
+  user-select: none;
+  cursor: move;
+}
