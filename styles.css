@@ -303,7 +303,6 @@ h1 {
   display: flex;
   flex-direction: column;
   transition: transform 0.2s, box-shadow 0.2s;
-  max-height: 500px;
 }
 
 .snippet-card:hover {
