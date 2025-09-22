@@ -99,16 +99,19 @@ function renderSnippets() {
       <pre><code class="language-${snippet.category.toLowerCase()}">${escapeHtml(snippet.code)}</code></pre>
     </div>
     <div class="snippet-actions">
-      <button class="secondary-btn copy-btn" onclick="copyToClipboard('${snippet.id}')">
-        <i class="fas fa-copy"></i> Copy
-      </button>
-      <button class="secondary-btn" onclick="editSnippet('${snippet.id}')">
-        <i class="fas fa-edit"></i> Edit
-      </button>
-      <button class="secondary-btn" onclick="deleteSnippet('${snippet.id}')">
-        <i class="fas fa-trash"></i> Delete
-      </button>
-    </div>
+  <button class="secondary-btn copy-btn" onclick="copyToClipboard('${snippet.id}')">
+    <i class="fas fa-copy"></i> Copy
+  </button>
+  <button class="secondary-btn" onclick="editSnippet('${snippet.id}')">
+    <i class="fas fa-edit"></i> Edit
+  </button>
+  <button class="secondary-btn" onclick="deleteSnippet('${snippet.id}')">
+    <i class="fas fa-trash"></i> Delete
+  </button>
+  <button class="secondary-btn" onclick="previewSnippet('${snippet.id}')">
+    <i class="fas fa-eye"></i> Preview
+  </button>
+</div>
   `;
 
 
@@ -197,6 +200,29 @@ function editSnippet(id) {
   }
 }
 
+function previewSnippet(id) {
+  const snippet = snippets.find(s => s.id === id);
+  if (snippet) {
+    modalTitle.textContent = `Preview: ${snippet.title}`;
+
+    titleInput.value = snippet.title;
+    categoryInput.value = snippet.category;
+    codeInput.value = snippet.code;
+
+    // Disable editing
+    titleInput.disabled = true;
+    categoryInput.disabled = true;
+    codeInput.disabled = true;
+
+    // Hide Save button, show Close instead of Cancel
+    saveSnippetBtn.style.display = 'none';
+    cancelSnippetBtn.textContent = 'Close';
+
+    modalOverlay.classList.add('active');
+  }
+}
+
+
 function deleteSnippet(id) {
   if (confirm('Are you sure you want to delete this snippet?')) {
     snippets = snippets.filter(snippet => snippet.id !== id);
@@ -208,7 +234,17 @@ function deleteSnippet(id) {
 
 function closeModal() {
   modalOverlay.classList.remove('active');
+  
+  // Re-enable inputs
+  titleInput.disabled = false;
+  categoryInput.disabled = false;
+  codeInput.disabled = false;
+
+  // Reset buttons
+  saveSnippetBtn.style.display = 'inline-block';
+  cancelSnippetBtn.textContent = 'Cancel';
 }
+
 
 function saveSnippet() {
   if (!snippetForm.checkValidity()) {

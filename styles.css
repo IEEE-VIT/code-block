@@ -538,3 +538,10 @@ textarea {
   background-color: #28a745; /* Green color for success feedback */
   opacity: 1;
 }
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+}
