@@ -21,6 +21,7 @@ const contentArea = document.getElementById('main-content');
 
 // State
 let snippets = [];
+let snippetOrder = [];
 let editMode = false;
 let activeCategory = 'all';
 
@@ -45,11 +46,14 @@ toggleSidebarBtn.addEventListener('click', toggleSidebar);
 // Functions
 function loadSnippets() {
   const storedSnippets = localStorage.getItem('codeSnippets');
+  const storedOrder = localStorage.getItem('snippetOrder');
   snippets = storedSnippets ? JSON.parse(storedSnippets) : [];
+  snippetOrder = storedOrder ? JSON.parse(storedOrder) : snippets.map(s => s.id);
 }
 
 function saveSnippetsToStorage() {
   localStorage.setItem('codeSnippets', JSON.stringify(snippets));
+  localStorage.setItem('snippetOrder', JSON.stringify(snippetOrder));
 }
 
 function renderSnippets() {
@@ -68,8 +72,14 @@ function renderSnippets() {
       snippet.category === activeCategory
     );
   }
-//make sure pinned comments show up first
-  filteredSnippets.sort((a,b)=>b.pinned-a.pinned);
+
+  // Order by user-defined order, then pinned
+  filteredSnippets.sort((a, b) => {
+    // Pinned first
+    if (b.pinned !== a.pinned) return b.pinned - a.pinned;
+    // Manual order
+    return snippetOrder.indexOf(a.id) - snippetOrder.indexOf(b.id);
+  });
 
   snippetsGrid.innerHTML = '';
 
@@ -82,10 +92,12 @@ function renderSnippets() {
     `;
     return;
   }
-  
+
   filteredSnippets.forEach(snippet => {
     const snippetCard = document.createElement('div');
     snippetCard.className = 'snippet-card';
+    snippetCard.setAttribute('draggable', 'true');
+    snippetCard.setAttribute('data-id', snippet.id);
 
     snippetCard.innerHTML = `
     <div class="snippet-header">
@@ -111,6 +123,11 @@ function renderSnippets() {
     </div>
   `;
 
+    // Drag events
+    snippetCard.addEventListener('dragstart', handleDragStart);
+    snippetCard.addEventListener('dragover', handleDragOver);
+    snippetCard.addEventListener('drop', handleDrop);
+    snippetCard.addEventListener('dragend', handleDragEnd);
 
     snippetsGrid.appendChild(snippetCard);
 
@@ -118,6 +135,36 @@ function renderSnippets() {
     const codeBlock = snippetCard.querySelector('pre code');
     hljs.highlightElement(codeBlock);
   });
+}
+
+// Drag and drop handlers
+let draggedId = null;
+function handleDragStart(e) {
+  draggedId = this.getAttribute('data-id');
+  this.classList.add('dragging');
+}
+function handleDragOver(e) {
+  e.preventDefault();
+  this.classList.add('drag-over');
+}
+function handleDrop(e) {
+  e.preventDefault();
+  this.classList.remove('drag-over');
+  const droppedId = this.getAttribute('data-id');
+  if (draggedId && droppedId && draggedId !== droppedId) {
+    const fromIdx = snippetOrder.indexOf(draggedId);
+    const toIdx = snippetOrder.indexOf(droppedId);
+    snippetOrder.splice(fromIdx, 1);
+    snippetOrder.splice(toIdx, 0, draggedId);
+    saveSnippetsToStorage();
+    renderSnippets();
+  }
+  draggedId = null;
+}
+function handleDragEnd(e) {
+  this.classList.remove('dragging');
+  document.querySelectorAll('.snippet-card.drag-over').forEach(card => card.classList.remove('drag-over'));
+}
 }
 
 function updateCategoryList() {
@@ -200,6 +247,7 @@ function editSnippet(id) {
 function deleteSnippet(id) {
   if (confirm('Are you sure you want to delete this snippet?')) {
     snippets = snippets.filter(snippet => snippet.id !== id);
+    snippetOrder = snippetOrder.filter(sid => sid !== id);
     saveSnippetsToStorage();
     renderSnippets();
     updateCategoryList();
@@ -235,8 +283,8 @@ function saveSnippet() {
   } else {
     const id = Date.now().toString();
     snippets.push({ id, title, category, code, pinned: false }); // Default pinned: false
+    snippetOrder.push(id);
   }
-  
 
   saveSnippetsToStorage();
   renderSnippets();
