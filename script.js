@@ -308,3 +308,24 @@ function copyToClipboard(id) {
 window.editSnippet = editSnippet;
 window.deleteSnippet = deleteSnippet; 
 window.copyToClipboard = copyToClipboard;
+
+const previewModal = document.getElementById('preview-modal-overlay');
+const previewCode = document.getElementById('preview-code');
+const closePreviewBtn = document.getElementById('close-preview-modal');
+
+function openPreview(code) {
+  previewCode.textContent = code;
+  hljs.highlightElement(previewCode);
+  previewModal.style.display = 'flex';
+}
+
+closePreviewBtn.addEventListener('click', () => {
+  previewModal.style.display = 'none';
+});
+
+document.getElementById('snippets-grid').addEventListener('click', (e) => {
+  const snippetCard = e.target.closest('.snippet-card');
+  if (!snippetCard) return;
+  const code = snippetCard.querySelector('pre') ? snippetCard.querySelector('pre').textContent : '';
+  if(code) openPreview(code);
+});
