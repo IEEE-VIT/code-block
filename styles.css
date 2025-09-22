@@ -1,3 +1,43 @@
+/* Preview Modal Styles */
+.preview-modal {
+  max-width: 800px;
+  width: 90vw;
+  max-height: 90vh;
+  overflow: hidden;
+}
+.preview-modal .modal-body {
+  padding: 1.5rem;
+  background: var(--bg-secondary);
+  border-radius: 0 0 8px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.preview-snippet-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+.preview-snippet-category {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+.preview-snippet-code {
+  display: block;
+  width: 100%;
+  max-height: 60vh;
+  overflow: auto;
+  font-size: 1rem;
+  background: #181c20;
+  color: #fff;
+  border-radius: 6px;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+.modal-overlay.active {
+  display: flex;
+}
 :root {
   --bg-primary: #f8f9fa;
   --bg-secondary: #ffffff;

@@ -112,6 +112,21 @@
     </div>
   </div>
 
+  <!-- Modal for previewing snippets -->
+  <div class="modal-overlay" id="preview-modal-overlay">
+    <div class="modal preview-modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="preview-modal-title">Snippet Preview</h2>
+        <button class="close-modal" id="close-preview-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="preview-snippet-title" class="preview-snippet-title"></div>
+        <div id="preview-snippet-category" class="preview-snippet-category"></div>
+        <pre><code id="preview-snippet-code" class="preview-snippet-code"></code></pre>
+      </div>
+    </div>
+  </div>
+
   <script src="script.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </body>

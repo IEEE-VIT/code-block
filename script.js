@@ -120,6 +120,9 @@ function renderSnippets() {
       <button class="secondary-btn" onclick="deleteSnippet('${snippet.id}')">
         <i class="fas fa-trash"></i> Delete
       </button>
+      <button class="secondary-btn preview-btn" onclick="previewSnippet('${snippet.id}')">
+        <i class="fas fa-eye"></i> Preview
+      </button>
     </div>
   `;
 
@@ -135,6 +138,34 @@ function renderSnippets() {
     const codeBlock = snippetCard.querySelector('pre code');
     hljs.highlightElement(codeBlock);
   });
+// Preview modal logic
+const previewModalOverlay = document.getElementById('preview-modal-overlay');
+const closePreviewModalBtn = document.getElementById('close-preview-modal');
+const previewSnippetTitle = document.getElementById('preview-snippet-title');
+const previewSnippetCategory = document.getElementById('preview-snippet-category');
+const previewSnippetCode = document.getElementById('preview-snippet-code');
+
+function previewSnippet(id) {
+  const snippet = snippets.find(s => s.id === id);
+  if (!snippet) return;
+  previewSnippetTitle.textContent = snippet.title;
+  previewSnippetCategory.textContent = snippet.category;
+  previewSnippetCode.textContent = snippet.code;
+  previewSnippetCode.className = `preview-snippet-code language-${snippet.category.toLowerCase()}`;
+  previewModalOverlay.classList.add('active');
+  hljs.highlightElement(previewSnippetCode);
+}
+
+closePreviewModalBtn.addEventListener('click', () => {
+  previewModalOverlay.classList.remove('active');
+});
+
+// Optional: close preview modal on overlay click
+previewModalOverlay.addEventListener('click', (e) => {
+  if (e.target === previewModalOverlay) {
+    previewModalOverlay.classList.remove('active');
+  }
+});
 }
 
 // Drag and drop handlers
@@ -164,7 +195,6 @@ function handleDrop(e) {
 function handleDragEnd(e) {
   this.classList.remove('dragging');
   document.querySelectorAll('.snippet-card.drag-over').forEach(card => card.classList.remove('drag-over'));
-}
 }
 
 function updateCategoryList() {
@@ -356,3 +386,4 @@ function copyToClipboard(id) {
 window.editSnippet = editSnippet;
 window.deleteSnippet = deleteSnippet; 
 window.copyToClipboard = copyToClipboard;
+window.previewSnippet = previewSnippet;
