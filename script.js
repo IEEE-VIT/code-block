@@ -128,6 +128,9 @@ function renderSnippets() {
     <div class="snippet-actions">
       <button class="secondary-btn copy-btn" onclick="copyToClipboard('${snippet.id}')">
         <i class="fas fa-copy"></i> Copy
+      <button class="secondary-btn" onclick="shareToGist('${snippet.id}')">
+        <i class="fab fa-github"></i> Share to Gist
+      </button>
       </button>
       <button class="secondary-btn" onclick="editSnippet('${snippet.id}')">
         <i class="fas fa-edit"></i> Edit
@@ -365,6 +368,87 @@ function copyToClipboard(id) {
 window.editSnippet = editSnippet;
 window.deleteSnippet = deleteSnippet; 
 window.copyToClipboard = copyToClipboard;
+window.shareToGist = shareToGist;
+
+async function shareToGist(id) {
+  const snippet = snippets.find(snippet => snippet.id === id);
+
+  if (!snippet) {
+    alert('Snippet not found.');
+    return;
+  }
+
+  let token = localStorage.getItem('githubGistToken');
+
+  if (!token) {
+    token = prompt('Enter your GitHub Personal Access Token:');
+
+    if (!token) {
+      return;
+    }
+
+    localStorage.setItem('githubGistToken', token);
+  }
+
+  const button = document.querySelector(
+    `.snippet-card[data-id="${id}"] button[onclick="shareToGist('${id}')"]`
+  );
+
+  const originalText = button ? button.innerHTML : '';
+
+  if (button) {
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+  }
+
+  try {
+    const filename = `${snippet.title.replace(/[^a-zA-Z0-9._-]/g, '_')}.txt`;
+
+    const response = await fetch('https://api.github.com/gists', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/vnd.github+json',
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        description: snippet.title,
+        public: false,
+        files: {
+          [filename]: {
+            content: snippet.code
+          }
+        }
+      })
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        localStorage.removeItem('githubGistToken');
+        throw new Error('Invalid GitHub token. Please try again.');
+      }
+
+      throw new Error(`GitHub API returned ${response.status}.`);
+    }
+
+    const gist = await response.json();
+
+    if (button) {
+      button.innerHTML = '<i class="fas fa-check"></i> Gist Created!';
+    }
+
+    window.open(gist.html_url, '_blank');
+
+  } catch (error) {
+    console.error('Failed to create Gist:', error);
+    alert(`Failed to create Gist: ${error.message}`);
+
+    if (button) {
+      button.disabled = false;
+      button.innerHTML = originalText;
+    }
+  }
+}
 
 const previewModal = document.getElementById('preview-modal-overlay');
 const previewCode = document.getElementById('preview-code');
