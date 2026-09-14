@@ -43,6 +43,7 @@ cancelSnippetBtn.addEventListener('click', closeModal);
 saveSnippetBtn.addEventListener('click', saveSnippet);
 toggleSidebarBtn.addEventListener('click', toggleSidebar);
 document.addEventListener('keydown', handleSearchShortcut);
+document.addEventListener('keydown', handleSaveShortcut);
 
 // Functions
 // Ctrl + / (Cmd + / on Mac) focuses the search bar from anywhere on the page
@@ -58,7 +59,15 @@ function handleSearchShortcut(e) {
   const end = searchInput.value.length;
   searchInput.setSelectionRange(end, end);
 }
+// Ctrl + S (Cmd + S on Mac) saves the snippet when the snippet modal is open
+function handleSaveShortcut(e) {
+  if (!(e.ctrlKey || e.metaKey) || e.altKey || e.key.toLowerCase() !== 's') return;
 
+  if (!modalOverlay.classList.contains('active')) return;
+
+  e.preventDefault();
+  saveSnippet();
+}
 function loadSnippets() {
   const storedSnippets = localStorage.getItem('codeSnippets');
   const storedOrder = localStorage.getItem('snippetOrder');
