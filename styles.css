@@ -547,7 +547,7 @@ textarea {
 }
 
 #preview-modal-overlay .modal {
-  background: var(--background-color);
+  background: var(--bg-secondary);
   max-width: 90%;
   max-height: 80%;
   overflow: auto;
@@ -560,6 +560,15 @@ textarea {
   white-space: pre;
   overflow-x: auto;
   max-width: 100%;
+}
+
+.snippets-grid pre {
+  overflow-x: auto;
+  white-space: pre;
+  max-width: 100%;
+  display: block;
+  padding: 10px;
+  box-sizing: border-box;
 }
 
 

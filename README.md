@@ -6,6 +6,7 @@ A simple, client-side web application to store and manage your personal code sni
  - Persistent Local Storage: Your snippets are saved in your browser and will be there when you return.
  - Syntax Highlighting: Code is automatically highlighted for readability using Highlight.js.
  - Search & Filter: Instantly search snippets by title or filter them by category.
+ - Quick Search Shortcut: Press `Ctrl + /` (`Cmd + /` on Mac) from anywhere on the page to jump to the search bar.
  - Pin to Top: Keep your most important snippets easily accessible.
  - One-Click Copy: A handy button to copy code directly to your clipboard.
  - Light & Dark Mode: A theme toggle for your viewing comfort.
