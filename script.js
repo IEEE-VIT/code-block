@@ -18,7 +18,20 @@ const categoryInput = document.getElementById('category');
 const codeInput = document.getElementById('code');
 const categoryList = document.getElementById('category-list');
 const contentArea = document.getElementById('main-content');
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  container.appendChild(toast);
 
+  requestAnimationFrame(() => toast.classList.add('active'));
+
+  setTimeout(() => {
+    toast.classList.remove('active');
+    toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+  }, 3000);
+}
 // State
 let snippets = [];
 let snippetOrder = [];
@@ -165,7 +178,7 @@ function handleDragEnd(e) {
   this.classList.remove('dragging');
   document.querySelectorAll('.snippet-card.drag-over').forEach(card => card.classList.remove('drag-over'));
 }
-}
+
 
 function updateCategoryList() {
   // Get unique categories
@@ -347,7 +360,7 @@ function copyToClipboard(id) {
       })
       .catch(err => {
         console.error('Failed to copy: ', err);
-        alert('Failed to copy code to clipboard');
+        showToast('Failed to copy code to clipboard', 'error');
       });
   }
 }
