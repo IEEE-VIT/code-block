@@ -4,7 +4,6 @@ let editMode = false;
 // DOM Elements
 const snippetsGrid = document.getElementById('snippets-grid');
 const addSnippetBtn = document.getElementById('add-snippet');
-const addSnippetSidebarBtn = document.getElementById('add-snippet-sidebar');
 const saveSnippetBtn = document.getElementById('save-snippet');
 const cancelSnippetBtn = document.getElementById('cancel-snippet');
 const closeModalBtn = document.getElementById('close-modal');
@@ -39,7 +38,7 @@ function renderSnippets() {
     snippetsGrid.innerHTML = '<p>No snippets yet. Add one!</p>';
     return;
   }
-  snippets.forEach(snippet => {
+  snippets.forEach((snippet, index) => {
     const card = document.createElement('div');
     card.className = 'snippet-card';
     card.innerHTML = `
@@ -47,13 +46,15 @@ function renderSnippets() {
       <pre><code>${snippet.code}</code></pre>
       <div class="snippet-actions">
         <button class="secondary-btn" onclick="deleteSnippet('${snippet.id}')">Delete</button>
+        <button class="share-btn" id="share-${index}">Share to Gist</button>
       </div>
     `;
     snippetsGrid.appendChild(card);
+    document.getElementById(`share-${index}`).addEventListener("click", () => shareToGist(index));
   });
 }
 
-// Add snippet modal
+// Modal controls
 function openAddSnippetModal() {
   editMode = false;
   snippetForm.reset();
@@ -92,8 +93,59 @@ function deleteSnippet(id) {
   renderSnippets();
 }
 
-// Export to GitHub Gist
-async function exportSnippetsAsGist() {
+// Share a single snippet
+async function shareToGist(index) {
+  const snippet = snippets[index];
+  const btn = document.getElementById(`share-${index}`);
+  let token = localStorage.getItem("githubToken");
+
+  if (!token) {
+    token = prompt("Enter your GitHub Personal Access Token:");
+    if (token) {
+      localStorage.setItem("githubToken", token);
+    } else {
+      alert("❌ Token required to create Gist.");
+      return;
+    }
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Creating Gist...";
+
+  try {
+    const response = await fetch("https://api.github.com/gists", {
+      method: "POST",
+      headers: {
+        "Authorization": `token ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        description: `Snippet: ${snippet.title}`,
+        public: false,
+        files: {
+          [`${snippet.title.replace(/\s+/g, "_")}.js`]: { content: snippet.code }
+        }
+      })
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      btn.textContent = "Gist Created!";
+      window.open(data.html_url, "_blank");
+    } else {
+      btn.textContent = "Share to Gist";
+      btn.disabled = false;
+      alert(`❌ Error: ${data.message}`);
+    }
+  } catch (err) {
+    btn.textContent = "Share to Gist";
+    btn.disabled = false;
+    alert("❌ Failed to connect to GitHub.");
+  }
+}
+
+// Export all snippets
+async function exportAllSnippetsAsGist() {
   if (snippets.length === 0) {
     alert("No snippets to export!");
     return;
@@ -104,15 +156,26 @@ async function exportSnippetsAsGist() {
     content += `// ${s.title} [${s.category}]\n${s.code}\n\n`;
   });
 
+  let token = localStorage.getItem("githubToken");
+  if (!token) {
+    token = prompt("Enter your GitHub Personal Access Token:");
+    if (token) {
+      localStorage.setItem("githubToken", token);
+    } else {
+      alert("❌ Token required to create Gist.");
+      return;
+    }
+  }
+
   try {
     const response = await fetch("https://api.github.com/gists", {
       method: "POST",
       headers: {
-        "Authorization": "token YOUR_GITHUB_TOKEN", // replace with your token
-        "Accept": "application/vnd.github+json"
+        "Authorization": `token ${token}`,
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        description: "Exported snippets from Code-Block",
+        description: "Exported snippets from CodeVault",
         public: false,
         files: { "snippets.js": { content } }
       })
@@ -121,6 +184,7 @@ async function exportSnippetsAsGist() {
     const data = await response.json();
     if (response.ok) {
       alert("✅ Gist created: " + data.html_url);
+      window.open(data.html_url, "_blank");
     } else {
       alert("❌ Failed: " + data.message);
     }
@@ -132,11 +196,11 @@ async function exportSnippetsAsGist() {
 
 // Event listeners
 addSnippetBtn.addEventListener('click', openAddSnippetModal);
-addSnippetSidebarBtn.addEventListener('click', openAddSnippetModal);
 saveSnippetBtn.addEventListener('click', saveSnippet);
 cancelSnippetBtn.addEventListener('click', closeModal);
 closeModalBtn.addEventListener('click', closeModal);
 
 // Make functions global for onclick
 window.deleteSnippet = deleteSnippet;
-window.exportSnippetsAsGist = exportSnippetsAsGist;
+window.shareToGist = shareToGist;
+window.exportAllSnippetsAsGist = exportAllSnippetsAsGist;

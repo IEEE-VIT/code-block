@@ -3,50 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Code-Block</title>
+  <title>CodeVault</title>
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
 </head>
 <body>
   <div class="app-container">
     <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-header">
-        <h2>Snippets</h2>
-      </div>
-      <div class="sidebar-content">
-        <button id="add-snippet-sidebar" class="add-snippet-btn">
-          <i class="fas fa-plus"></i> New Snippet
-        </button>
-        <h3>Categories</h3>
-        <ul class="category-list" id="category-list">
-          <li data-category="all" class="active">All Snippets</li>
-        </ul>
-      </div>
+    <aside class="sidebar">
+      <h2>Snippets</h2>
+      <button id="add-snippet" class="primary-btn">New Snippet</button>
     </aside>
 
     <!-- Main Content -->
-    <main class="main-content" id="main-content">
+    <main class="main-content">
       <header>
-        <div class="header-content">
-          <h1>CODEVAULT</h1>
-          <div class="search-container">
-            <i class="fas fa-search search-icon"></i>
-            <input type="text" id="search" placeholder="Search snippets...">
-          </div>
-          <div class="actions">
-            <button id="add-snippet" class="primary-btn">Add Snippet</button>
-            <button class="secondary-btn export-btn" onclick="exportSnippetsAsGist()">
-              <i class="fas fa-upload"></i> Export All as Gist
-            </button>
-          </div>
+        <h1>CODEVAULT</h1>
+        <div class="actions">
+          <button class="secondary-btn export-btn" onclick="exportAllSnippetsAsGist()">
+            Export All as Gist
+          </button>
         </div>
       </header>
 
-      <div class="content-area">
-        <div class="snippets-grid" id="snippets-grid"></div>
-      </div>
+      <div class="snippets-grid" id="snippets-grid"></div>
     </main>
   </div>
 
@@ -76,6 +55,5 @@
   </div>
 
   <script src="script.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </body>
 </html>
