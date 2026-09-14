@@ -6,6 +6,9 @@
   --text-secondary: #6c757d;
   --accent: #4361ee;
   --accent-hover: #3a56d4;
+  --success: #28a745;
+  --info: #007bff;
+  --danger: #dc3545;
   --border: #dee2e6;
   --shadow: rgba(0, 0, 0, 0.1);
   --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
@@ -43,28 +46,34 @@ body {
   overflow: hidden;
 }
 
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
 .app-container {
   display: flex;
   height: 100vh;
   width: 100%;
 }
 
-/* Sidebar Styles */
 .sidebar {
-  width: 250px; /* Sidebar width */
+  width: 250px;
   background-color: var(--bg-sidebar);
   border-right: 1px solid var(--border);
-  height: 100vh; /* Full height */
+  height: 100vh;
   position: fixed;
   top: 0;
-  left: -250px; /* Start off-screen */
+  left: -250px;
   transition: transform 0.3s ease-in-out;
   overflow-y: auto;
   z-index: 10;
 }
 
-.sidebar.active{
-transform: translateX(250px); /* Slide in */
+.sidebar.active {
+  transform: translateX(250px);
 }
 
 .sidebar-header {
@@ -81,9 +90,9 @@ transform: translateX(250px); /* Slide in */
 }
 
 .toggle-sidebar {
-  position: fixed;  /* Fix position so it doesn’t shift */
+  position: fixed;
   top: 20px;
-  left: 20px; /* Align near sidebar */
+  left: 20px;
   background: none;
   border: none;
   color: var(--text-secondary);
@@ -94,7 +103,7 @@ transform: translateX(250px); /* Slide in */
 }
 
 .sidebar.active + .toggle-sidebar {
-  transform: translateX(180px); /* Move along with sidebar */
+  transform: translateX(180px);
 }
 
 .sidebar-content {
@@ -122,7 +131,7 @@ transform: translateX(250px); /* Slide in */
   margin: 0.25rem 0;
   border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s ease;
 }
 
 .category-list li:hover {
@@ -147,7 +156,7 @@ transform: translateX(250px); /* Slide in */
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s ease;
 }
 
 .add-snippet-btn:hover {
@@ -182,14 +191,13 @@ transform: translateX(250px); /* Slide in */
   position: absolute;
   top: 2px;
   left: 2px;
-  transition: transform 0.3s;
+  transition: transform 0.3s ease;
 }
 
 .dark-mode .toggle-slider {
   transform: translateX(26px);
 }
 
-/* Main Content Styles */
 .main-content {
   flex-grow: 1;
   display: flex;
@@ -197,18 +205,16 @@ transform: translateX(250px); /* Slide in */
   height: 100%;
   overflow: hidden;
   margin-left: 0;
-  /* transition: transform 0.3s ease-in-out; */
   transition: margin-left 0.3s ease-in-out;
 }
 
 header {
   background-color: var(--bg-secondary);
   padding: 0 1.5rem;
-  height: var(--header-height);
+  height: 70px;
   box-shadow: 0 2px 5px var(--shadow);
   z-index: 5;
   width: 100%;
-  height: 70px;
 }
 
 .header-content {
@@ -256,31 +262,36 @@ h1 {
 
 .primary-btn {
   padding: 0.5rem 1rem;
-  background-color: var(--accent);
-  color: white;
-  border: none;
+  background-color: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.9rem;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .primary-btn:hover {
-  background-color: var(--accent-hover);
+  background-color: var(--accent);
+  color: white;
+  border-color: var(--accent);
 }
 
 .secondary-btn {
   padding: 0.5rem 1rem;
-  background-color: var(--text-secondary);
-  color: white;
-  border: none;
+  background-color: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--text-secondary);
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.9rem;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .secondary-btn:hover {
-  opacity: 0.9;
+  background-color: var(--text-secondary);
+  color: white;
+  border-color: var(--text-secondary);
 }
 
 .content-area {
@@ -302,8 +313,10 @@ h1 {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   max-height: 500px;
+  user-select: none;
+  cursor: move;
 }
 
 .snippet-card:hover {
@@ -359,6 +372,54 @@ h1 {
 .snippet-actions button {
   padding: 0.4rem 0.8rem;
   font-size: 0.8rem;
+  background-color: transparent;
+  border-radius: 4px;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.snippet-actions .secondary-btn,
+.snippet-actions .action-btn {
+  background-color: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.snippet-actions .secondary-btn:hover,
+.snippet-actions .action-btn:hover {
+  transform: translateY(-1px);
+}
+
+.snippet-actions .copy-btn {
+  border-color: #2ecc71;
+  color: #2ecc71;
+}
+
+.snippet-actions .copy-btn:hover {
+  background-color: #2ecc71;
+  border-color: #2ecc71;
+  color: white;
+}
+
+.snippet-actions .edit-btn {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.snippet-actions .edit-btn:hover {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.snippet-actions .delete-btn {
+  border-color: #e74c3c;
+  color: #e74c3c;
+}
+
+.snippet-actions .delete-btn:hover {
+  background-color: #e74c3c;
+  border-color: #e74c3c;
+  color: white;
 }
 
 .modal-overlay {
@@ -428,7 +489,9 @@ label {
   font-weight: 500;
 }
 
-input, select, textarea {
+input,
+select,
+textarea {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid var(--border);
@@ -465,32 +528,31 @@ textarea {
   margin-bottom: 1rem;
 }
 
-/* Responsive Styles */
 @media (max-width: 768px) {
   .sidebar {
     position: fixed;
     transform: translateX(-100%);
   }
-  
+
   .sidebar.active {
     transform: translateX(0);
   }
-  
+
   .toggle-sidebar {
     display: block;
   }
-  
+
   .header-content {
     flex-wrap: wrap;
   }
-  
+
   .search-container {
     order: 3;
     max-width: none;
     width: 100%;
     margin-top: 0.5rem;
   }
-  
+
   .snippets-grid {
     grid-template-columns: 1fr;
   }
@@ -501,28 +563,25 @@ textarea {
   border: none;
   cursor: pointer;
   font-size: 16px;
-  color: var(--text-secondary); /* Gray color for unpinned state */
-  transition: color 0.2s, transform 0.2s;
+  color: var(--text-secondary);
+  transition: color 0.2s ease, transform 0.2s ease;
 }
 
 .pin-btn .fas {
-  color: inherit; /* Inherit color from parent */
+  color: inherit;
 }
 
-/* Pinned state */
 .pin-btn.pinned {
-  color: #f39c12; /* Gold for pinned state */
-  transform: rotate(45deg); /* Optional: Rotate the pin to indicate it's "stuck" */
+  color: #f39c12;
+  transform: rotate(45deg);
 }
 
-/* Hover effect for better interactivity */
 .pin-btn:hover {
-  color: #f39c12; /* Gold on hover for unpinned state */
+  color: #f39c12;
 }
 
-/* Ensure the pinned state doesn't change color on hover */
 .pin-btn.pinned:hover {
-  color: #f39c12; /* Keep gold color when pinned */
+  color: #f39c12;
 }
 
 .copy-btn {
@@ -532,14 +591,19 @@ textarea {
 }
 
 .copy-btn:disabled {
-  background-color: #28a745; /* Green color for success feedback */
+  background-color: var(--success);
+  border-color: var(--success);
+  color: white;
   opacity: 1;
 }
 
 #preview-modal-overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.7);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -547,7 +611,7 @@ textarea {
 }
 
 #preview-modal-overlay .modal {
-  background: var(--background-color);
+  background: var(--bg-secondary);
   max-width: 90%;
   max-height: 80%;
   overflow: auto;
@@ -560,10 +624,4 @@ textarea {
   white-space: pre;
   overflow-x: auto;
   max-width: 100%;
-}
-
-
-.snippet-card {
-  user-select: none;
-  cursor: move;
 }
