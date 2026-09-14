@@ -18,12 +18,34 @@ const categoryInput = document.getElementById('category');
 const codeInput = document.getElementById('code');
 const categoryList = document.getElementById('category-list');
 const contentArea = document.getElementById('main-content');
+const toastContainer = document.getElementById('toast-container');
 
 // State
 let snippets = [];
 let snippetOrder = [];
 let editMode = false;
 let activeCategory = 'all';
+
+// Toast Notification
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+
+  toastContainer.appendChild(toast);
+
+  // Trigger reflow to animate slide-in
+  requestAnimationFrame(() => {
+    toast.classList.add('active');
+  });
+
+  setTimeout(() => {
+    toast.classList.remove('active');
+    setTimeout(() => {
+      toast.remove();
+    }, 300);
+  }, 3000);
+}
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -44,17 +66,13 @@ saveSnippetBtn.addEventListener('click', saveSnippet);
 toggleSidebarBtn.addEventListener('click', toggleSidebar);
 document.addEventListener('keydown', handleSearchShortcut);
 
-// Functions
-// Ctrl + / (Cmd + / on Mac) focuses the search bar from anywhere on the page
 function handleSearchShortcut(e) {
   if (!(e.ctrlKey || e.metaKey) || e.altKey || e.key !== '/') return;
 
-  // Don't steal focus while a modal (editor or preview) is covering the search bar
   if (document.querySelector('.modal-overlay.active')) return;
 
   e.preventDefault();
   searchInput.focus();
-  // Keep any existing query and place the caret at the end of it
   const end = searchInput.value.length;
   searchInput.setSelectionRange(end, end);
 }
@@ -88,11 +106,8 @@ function renderSnippets() {
     );
   }
 
-  // Order by user-defined order, then pinned
   filteredSnippets.sort((a, b) => {
-    // Pinned first
     if (b.pinned !== a.pinned) return b.pinned - a.pinned;
-    // Manual order
     return snippetOrder.indexOf(a.id) - snippetOrder.indexOf(b.id);
   });
 
@@ -138,7 +153,6 @@ function renderSnippets() {
     </div>
   `;
 
-    // Drag events
     snippetCard.addEventListener('dragstart', handleDragStart);
     snippetCard.addEventListener('dragover', handleDragOver);
     snippetCard.addEventListener('drop', handleDrop);
@@ -146,13 +160,11 @@ function renderSnippets() {
 
     snippetsGrid.appendChild(snippetCard);
 
-    // Highlight the code block
     const codeBlock = snippetCard.querySelector('pre code');
     hljs.highlightElement(codeBlock);
   });
 }
 
-// Drag and drop handlers
 let draggedId = null;
 function handleDragStart(e) {
   draggedId = this.getAttribute('data-id');
@@ -182,15 +194,12 @@ function handleDragEnd(e) {
 }
 
 function updateCategoryList() {
-  // Get unique categories
   const categories = [...new Set(snippets.map(snippet => snippet.category))];
   
-  // Clear existing categories except "All Snippets"
   const allCategoriesItem = categoryList.querySelector('[data-category="all"]');
   categoryList.innerHTML = '';
   categoryList.appendChild(allCategoriesItem);
   
-  // Add categories to the list
   categories.forEach(category => {
     if (category) {
       const li = document.createElement('li');
@@ -206,7 +215,6 @@ function updateCategoryList() {
     }
   });
   
-  // Add event listener to "All Snippets"
   allCategoriesItem.addEventListener('click', () => {
     setActiveCategory('all');
   });
@@ -215,7 +223,6 @@ function updateCategoryList() {
 function setActiveCategory(category) {
   activeCategory = category;
   
-  // Update active class
   document.querySelectorAll('.category-list li').forEach(item => {
     if (item.getAttribute('data-category') === category) {
       item.classList.add('active');
@@ -291,12 +298,12 @@ function saveSnippet() {
         title, 
         category, 
         code, 
-        pinned: snippets[index].pinned // Preserve pinned status 
+        pinned: snippets[index].pinned 
       };
     }
   } else {
     const id = Date.now().toString();
-    snippets.push({ id, title, category, code, pinned: false }); // Default pinned: false
+    snippets.push({ id, title, category, code, pinned: false });
     snippetOrder.push(id);
   }
 
@@ -329,6 +336,7 @@ function toggleSidebar() {
     contentArea.style.marginLeft = "0px";
   }
 }
+
 function togglePin(id) {
   const snippet = snippets.find(s => s.id === id);
   if (snippet) {
@@ -343,7 +351,7 @@ function copyToClipboard(id) {
   if (snippet) {
     navigator.clipboard.writeText(snippet.code)
       .then(() => {
-        // Optional: Show feedback to user
+        showToast('Copied code to clipboard!', 'success');
         const button = document.querySelector(`.snippet-card button[onclick="copyToClipboard('${id}')"]`);
         const originalText = button.innerHTML;
         button.innerHTML = '<i class="fas fa-check"></i> Copied!';
@@ -356,12 +364,12 @@ function copyToClipboard(id) {
       })
       .catch(err => {
         console.error('Failed to copy: ', err);
-        alert('Failed to copy code to clipboard');
+        showToast('Failed to copy code to clipboard', 'error');
       });
   }
 }
 
-// Make functions available globally for onclick handlers
+window.showToast = showToast;
 window.editSnippet = editSnippet;
 window.deleteSnippet = deleteSnippet; 
 window.copyToClipboard = copyToClipboard;
@@ -372,7 +380,6 @@ const closePreviewBtn = document.getElementById('close-preview-modal');
 
 function openPreview(code) {
   previewCode.textContent = code;
-  // highlight.js skips elements it has already highlighted
   delete previewCode.dataset.highlighted;
   hljs.highlightElement(previewCode);
   previewModal.classList.add('active');
@@ -384,7 +391,6 @@ closePreviewBtn.addEventListener('click', () => {
 
 document.getElementById('snippets-grid').addEventListener('click', (e) => {
   const snippetCard = e.target.closest('.snippet-card');
-  // Card buttons (pin, copy, edit, delete) have their own actions
   if (!snippetCard || e.target.closest('button')) return;
   const code = snippetCard.querySelector('pre') ? snippetCard.querySelector('pre').textContent : '';
   if(code) openPreview(code);

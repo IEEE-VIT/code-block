@@ -51,20 +51,20 @@ body {
 
 /* Sidebar Styles */
 .sidebar {
-  width: 250px; /* Sidebar width */
+  width: 250px;
   background-color: var(--bg-sidebar);
   border-right: 1px solid var(--border);
-  height: 100vh; /* Full height */
+  height: 100vh;
   position: fixed;
   top: 0;
-  left: -250px; /* Start off-screen */
+  left: -250px;
   transition: transform 0.3s ease-in-out;
   overflow-y: auto;
   z-index: 10;
 }
 
 .sidebar.active{
-transform: translateX(250px); /* Slide in */
+transform: translateX(250px);
 }
 
 .sidebar-header {
@@ -81,9 +81,9 @@ transform: translateX(250px); /* Slide in */
 }
 
 .toggle-sidebar {
-  position: fixed;  /* Fix position so it doesn’t shift */
+  position: fixed;
   top: 20px;
-  left: 20px; /* Align near sidebar */
+  left: 20px;
   background: none;
   border: none;
   color: var(--text-secondary);
@@ -94,7 +94,7 @@ transform: translateX(250px); /* Slide in */
 }
 
 .sidebar.active + .toggle-sidebar {
-  transform: translateX(180px); /* Move along with sidebar */
+  transform: translateX(180px);
 }
 
 .sidebar-content {
@@ -197,7 +197,6 @@ transform: translateX(250px); /* Slide in */
   height: 100%;
   overflow: hidden;
   margin-left: 0;
-  /* transition: transform 0.3s ease-in-out; */
   transition: margin-left 0.3s ease-in-out;
 }
 
@@ -501,28 +500,25 @@ textarea {
   border: none;
   cursor: pointer;
   font-size: 16px;
-  color: var(--text-secondary); /* Gray color for unpinned state */
+  color: var(--text-secondary);
   transition: color 0.2s, transform 0.2s;
 }
 
 .pin-btn .fas {
-  color: inherit; /* Inherit color from parent */
+  color: inherit;
 }
 
-/* Pinned state */
 .pin-btn.pinned {
-  color: #f39c12; /* Gold for pinned state */
-  transform: rotate(45deg); /* Optional: Rotate the pin to indicate it's "stuck" */
+  color: #f39c12;
+  transform: rotate(45deg);
 }
 
-/* Hover effect for better interactivity */
 .pin-btn:hover {
-  color: #f39c12; /* Gold on hover for unpinned state */
+  color: #f39c12;
 }
 
-/* Ensure the pinned state doesn't change color on hover */
 .pin-btn.pinned:hover {
-  color: #f39c12; /* Keep gold color when pinned */
+  color: #f39c12;
 }
 
 .copy-btn {
@@ -532,7 +528,7 @@ textarea {
 }
 
 .copy-btn:disabled {
-  background-color: #28a745; /* Green color for success feedback */
+  background-color: #28a745;
   opacity: 1;
 }
 
@@ -571,8 +567,50 @@ textarea {
   box-sizing: border-box;
 }
 
-
 .snippet-card {
   user-select: none;
   cursor: move;
+}
+
+/* Toast Container & Notification Styles */
+#toast-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 2000;
+}
+
+.toast {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-left: 4px solid var(--accent);
+  padding: 12px 20px;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateX(120%);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  min-width: 220px;
+  max-width: 320px;
+  font-size: 0.9rem;
+}
+
+.toast.active {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.toast.toast-error {
+  border-left-color: #e74c3c;
+}
+
+.toast.toast-success {
+  border-left-color: #2ecc71;
+}
+
+.toast.toast-info {
+  border-left-color: var(--accent);
 }
