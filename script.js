@@ -40,9 +40,16 @@ addSnippetSidebarBtn.addEventListener('click', openAddSnippetModal);
 themeToggle.addEventListener('click', toggleTheme);
 closeModalBtn.addEventListener('click', closeModal);
 cancelSnippetBtn.addEventListener('click', closeModal);
-saveSnippetBtn.addEventListener('click', saveSnippet);
 toggleSidebarBtn.addEventListener('click', toggleSidebar);
+
+// Handle form submission (covers both button click & requestSubmit from shortcut)
+snippetForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  saveSnippet();
+});
+
 document.addEventListener('keydown', handleSearchShortcut);
+document.addEventListener('keydown', handleSaveShortcut);
 
 // Functions
 // Ctrl + / (Cmd + / on Mac) focuses the search bar from anywhere on the page
@@ -57,6 +64,22 @@ function handleSearchShortcut(e) {
   // Keep any existing query and place the caret at the end of it
   const end = searchInput.value.length;
   searchInput.setSelectionRange(end, end);
+}
+
+// Ctrl + S (Cmd + S on Mac) saves the snippet when the modal is open
+function handleSaveShortcut(e) {
+  if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+    if (modalOverlay.classList.contains('active')) {
+      e.preventDefault(); // Blocks standard browser "Save Page As"
+      
+      // Triggers native browser validation tooltips if invalid, or submits if valid
+      if (snippetForm) {
+        snippetForm.requestSubmit();
+      } else {
+        saveSnippet();
+      }
+    }
+  }
 }
 
 function loadSnippets() {
@@ -273,11 +296,6 @@ function closeModal() {
 }
 
 function saveSnippet() {
-  if (!snippetForm.checkValidity()) {
-    snippetForm.reportValidity();
-    return;
-  }
-
   const title = titleInput.value;
   const category = categoryInput.value;
   const code = codeInput.value;
@@ -329,6 +347,7 @@ function toggleSidebar() {
     contentArea.style.marginLeft = "0px";
   }
 }
+
 function togglePin(id) {
   const snippet = snippets.find(s => s.id === id);
   if (snippet) {
@@ -343,7 +362,6 @@ function copyToClipboard(id) {
   if (snippet) {
     navigator.clipboard.writeText(snippet.code)
       .then(() => {
-        // Optional: Show feedback to user
         const button = document.querySelector(`.snippet-card button[onclick="copyToClipboard('${id}')"]`);
         const originalText = button.innerHTML;
         button.innerHTML = '<i class="fas fa-check"></i> Copied!';
