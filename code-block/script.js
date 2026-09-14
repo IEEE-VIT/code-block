@@ -18,6 +18,7 @@ const categoryInput = document.getElementById('category');
 const codeInput = document.getElementById('code');
 const categoryList = document.getElementById('category-list');
 const contentArea = document.getElementById('main-content');
+const toastContainer = document.getElementById('toast-container');
 
 // State
 let snippets = [];
@@ -42,21 +43,22 @@ closeModalBtn.addEventListener('click', closeModal);
 cancelSnippetBtn.addEventListener('click', closeModal);
 saveSnippetBtn.addEventListener('click', saveSnippet);
 toggleSidebarBtn.addEventListener('click', toggleSidebar);
-document.addEventListener('keydown', handleSearchShortcut);
 
 // Functions
-// Ctrl + / (Cmd + / on Mac) focuses the search bar from anywhere on the page
-function handleSearchShortcut(e) {
-  if (!(e.ctrlKey || e.metaKey) || e.altKey || e.key !== '/') return;
+function showToast(message, type = 'error') {
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+  toastContainer.appendChild(toast);
 
-  // Don't steal focus while a modal (editor or preview) is covering the search bar
-  if (document.querySelector('.modal-overlay.active')) return;
+  requestAnimationFrame(() => {
+    toast.classList.add('active');
+  });
 
-  e.preventDefault();
-  searchInput.focus();
-  // Keep any existing query and place the caret at the end of it
-  const end = searchInput.value.length;
-  searchInput.setSelectionRange(end, end);
+  setTimeout(() => {
+    toast.classList.remove('active');
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
 }
 
 function loadSnippets() {
@@ -76,14 +78,14 @@ function renderSnippets() {
   let filteredSnippets = snippets;
 
   if (searchTerm) {
-    filteredSnippets = filteredSnippets.filter(snippet => 
-      snippet.title.toLowerCase().includes(searchTerm) || 
+    filteredSnippets = filteredSnippets.filter(snippet =>
+      snippet.title.toLowerCase().includes(searchTerm) ||
       snippet.category.toLowerCase().includes(searchTerm)
     );
   }
 
   if (activeCategory !== 'all') {
-    filteredSnippets = filteredSnippets.filter(snippet => 
+    filteredSnippets = filteredSnippets.filter(snippet =>
       snippet.category === activeCategory
     );
   }
@@ -129,10 +131,10 @@ function renderSnippets() {
       <button class="secondary-btn copy-btn" onclick="copyToClipboard('${snippet.id}')">
         <i class="fas fa-copy"></i> Copy
       </button>
-      <button class="secondary-btn" onclick="editSnippet('${snippet.id}')">
+      <button class="secondary-btn edit-btn" onclick="editSnippet('${snippet.id}')">
         <i class="fas fa-edit"></i> Edit
       </button>
-      <button class="secondary-btn" onclick="deleteSnippet('${snippet.id}')">
+      <button class="secondary-btn delete-btn" onclick="deleteSnippet('${snippet.id}')">
         <i class="fas fa-trash"></i> Delete
       </button>
     </div>
@@ -184,12 +186,12 @@ function handleDragEnd(e) {
 function updateCategoryList() {
   // Get unique categories
   const categories = [...new Set(snippets.map(snippet => snippet.category))];
-  
+
   // Clear existing categories except "All Snippets"
   const allCategoriesItem = categoryList.querySelector('[data-category="all"]');
   categoryList.innerHTML = '';
   categoryList.appendChild(allCategoriesItem);
-  
+
   // Add categories to the list
   categories.forEach(category => {
     if (category) {
@@ -205,7 +207,7 @@ function updateCategoryList() {
       categoryList.appendChild(li);
     }
   });
-  
+
   // Add event listener to "All Snippets"
   allCategoriesItem.addEventListener('click', () => {
     setActiveCategory('all');
@@ -214,7 +216,7 @@ function updateCategoryList() {
 
 function setActiveCategory(category) {
   activeCategory = category;
-  
+
   // Update active class
   document.querySelectorAll('.category-list li').forEach(item => {
     if (item.getAttribute('data-category') === category) {
@@ -223,7 +225,7 @@ function setActiveCategory(category) {
       item.classList.remove('active');
     }
   });
-  
+
   renderSnippets();
 }
 
@@ -247,7 +249,7 @@ function openAddSnippetModal() {
 function editSnippet(id) {
   editMode = true;
   modalTitle.textContent = 'Edit Snippet';
-  
+
   const snippet = snippets.find(s => s.id === id);
   if (snippet) {
     snippetIdInput.value = snippet.id;
@@ -286,11 +288,11 @@ function saveSnippet() {
     const id = snippetIdInput.value;
     const index = snippets.findIndex(s => s.id === id);
     if (index !== -1) {
-      snippets[index] = { 
-        id, 
-        title, 
-        category, 
-        code, 
+      snippets[index] = {
+        id,
+        title,
+        category,
+        code,
         pinned: snippets[index].pinned // Preserve pinned status 
       };
     }
@@ -320,7 +322,7 @@ function toggleTheme() {
 
 function toggleSidebar() {
   sidebar.classList.toggle('active');
-  
+
   if (sidebar.classList.contains("active")) {
     toggleSidebarBtn.style.transform = "translateX(180px)";
     contentArea.style.marginLeft = "250px";
@@ -338,6 +340,11 @@ function togglePin(id) {
   }
 }
 
+function saveSnippetsToStorage() {
+  localStorage.setItem('codeSnippets', JSON.stringify(snippets));
+}
+
+
 function copyToClipboard(id) {
   const snippet = snippets.find(s => s.id === id);
   if (snippet) {
@@ -348,7 +355,7 @@ function copyToClipboard(id) {
         const originalText = button.innerHTML;
         button.innerHTML = '<i class="fas fa-check"></i> Copied!';
         button.disabled = true;
-        
+
         setTimeout(() => {
           button.innerHTML = originalText;
           button.disabled = false;
@@ -356,14 +363,14 @@ function copyToClipboard(id) {
       })
       .catch(err => {
         console.error('Failed to copy: ', err);
-        alert('Failed to copy code to clipboard');
+        showToast('Failed to copy code to clipboard', 'error');
       });
   }
 }
 
 // Make functions available globally for onclick handlers
 window.editSnippet = editSnippet;
-window.deleteSnippet = deleteSnippet; 
+window.deleteSnippet = deleteSnippet;
 window.copyToClipboard = copyToClipboard;
 
 const previewModal = document.getElementById('preview-modal-overlay');
@@ -372,20 +379,68 @@ const closePreviewBtn = document.getElementById('close-preview-modal');
 
 function openPreview(code) {
   previewCode.textContent = code;
-  // highlight.js skips elements it has already highlighted
-  delete previewCode.dataset.highlighted;
   hljs.highlightElement(previewCode);
-  previewModal.classList.add('active');
+  previewModal.style.display = 'flex';
 }
 
 closePreviewBtn.addEventListener('click', () => {
-  previewModal.classList.remove('active');
+  previewModal.style.display = 'none';
 });
 
 document.getElementById('snippets-grid').addEventListener('click', (e) => {
   const snippetCard = e.target.closest('.snippet-card');
-  // Card buttons (pin, copy, edit, delete) have their own actions
-  if (!snippetCard || e.target.closest('button')) return;
+  if (!snippetCard) return;
   const code = snippetCard.querySelector('pre') ? snippetCard.querySelector('pre').textContent : '';
-  if(code) openPreview(code);
+  if (code) openPreview(code);
+});
+
+
+javascript
+document.addEventListener('DOMContentLoaded', function () {
+  const snippetsGrid = document.getElementById('snippets-grid');
+  let draggedIndex = null;
+
+  snippetsGrid.addEventListener('dragstart', (e) => {
+    if (e.target.classList.contains('snippet-card')) {
+      draggedIndex = Array.from(snippetsGrid.children).indexOf(e.target);
+      e.dataTransfer.effectAllowed = 'move';
+    }
+  });
+
+  snippetsGrid.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    const target = e.target.closest('.snippet-card');
+    if (!target || target === snippetsGrid.children[draggedIndex]) return;
+    const targetIndex = Array.from(snippetsGrid.children).indexOf(target);
+    if (targetIndex > draggedIndex) {
+      snippetsGrid.insertBefore(snippetsGrid.children[draggedIndex], target.nextSibling);
+    } else {
+      snippetsGrid.insertBefore(snippetsGrid.children[draggedIndex], target);
+    }
+  });
+
+  snippetsGrid.addEventListener('drop', (e) => {
+    e.preventDefault();
+    draggedIndex = null;
+    saveOrder();
+  });
+
+  function saveOrder() {
+    const order = [];
+    snippetsGrid.querySelectorAll('.snippet-card').forEach(card => {
+      order.push(card.getAttribute('data-id'));
+    });
+    localStorage.setItem('snippetsOrder', JSON.stringify(order));
+  }
+
+  function loadOrder() {
+    const order = JSON.parse(localStorage.getItem('snippetsOrder'));
+    if (!order) return;
+    order.forEach(id => {
+      const card = snippetsGrid.querySelector(`.snippet-card[data-id="${id}"]`);
+      if (card) snippetsGrid.appendChild(card);
+    });
+  }
+
+  loadOrder();
 });
