@@ -42,23 +42,64 @@ closeModalBtn.addEventListener('click', closeModal);
 cancelSnippetBtn.addEventListener('click', closeModal);
 saveSnippetBtn.addEventListener('click', saveSnippet);
 toggleSidebarBtn.addEventListener('click', toggleSidebar);
-document.addEventListener('keydown', handleSearchShortcut);
 
-// Functions
-// Ctrl + / (Cmd + / on Mac) focuses the search bar from anywhere on the page
-function handleSearchShortcut(e) {
-  if (!(e.ctrlKey || e.metaKey) || e.altKey || e.key !== '/') return;
+document.addEventListener('keydown', (e) => {
+  const isCtrl = e.ctrlKey || e.metaKey;
+  
+  // Shortcut 1: Focus Search Bar (Ctrl + /)
+  if (isCtrl && (e.code === 'Slash' || e.key === '/')) {
+    // Only focus if the modal is CLOSED
+    if (!modalOverlay.classList.contains('active')) {
+      e.preventDefault(); 
+      console.log("Ctrl + / pressed: Focusing search bar!");
+      searchInput.focus();
+    }
+  }
 
-  // Don't steal focus while a modal (editor or preview) is covering the search bar
-  if (document.querySelector('.modal-overlay.active')) return;
+  // Shortcut 2: Save Snippet (Ctrl + S)
+  if (isCtrl && (e.code === 'KeyS' || e.key.toLowerCase() === 's')) {
+    // Only save if the modal is OPEN
+    if (modalOverlay.classList.contains('active')) {
+      e.preventDefault(); 
+      console.log("Ctrl + S pressed: Saving snippet!");
+      saveSnippet();
+    }
+  }
+});
 
-  e.preventDefault();
-  searchInput.focus();
-  // Keep any existing query and place the caret at the end of it
-  const end = searchInput.value.length;
-  searchInput.setSelectionRange(end, end);
+function showToast(message, type = 'success') {
+  const toastContainer = document.getElementById('toast-container');
+  
+  // Create the toast div
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  
+  // Set the icon based on the type (success or error)
+  const icon = type === 'error' ? '<i class="fas fa-exclamation-circle"></i>' : '<i class="fas fa-check-circle"></i>';
+  
+  toast.innerHTML = `${icon} <span>${message}</span>`;
+  
+  // Add it to the DOM
+  toastContainer.appendChild(toast);
+  
+  // Slight delay before adding the 'active' class to trigger the CSS animation
+  setTimeout(() => {
+    toast.classList.add('active');
+  }, 10);
+  
+  // Remove the toast after 3 seconds
+  setTimeout(() => {
+    toast.classList.remove('active'); // Slide out
+    setTimeout(() => {
+      toast.remove(); // Delete from DOM after animation finishes
+    }, 400); 
+  }, 3000);
 }
 
+// Make it globally available just like the other functions
+window.showToast = showToast;
+
+// Functions
 function loadSnippets() {
   const storedSnippets = localStorage.getItem('codeSnippets');
   const storedOrder = localStorage.getItem('snippetOrder');
@@ -126,13 +167,16 @@ function renderSnippets() {
       <pre><code class="language-${snippet.category.toLowerCase()}">${escapeHtml(snippet.code)}</code></pre>
     </div>
     <div class="snippet-actions">
+      <button class="secondary-btn gist-btn" id="gist-btn-${snippet.id}" onclick="exportToGist('${snippet.id}')">
+        <i class="fab fa-github"></i> Gist
+      </button>
       <button class="secondary-btn copy-btn" onclick="copyToClipboard('${snippet.id}')">
         <i class="fas fa-copy"></i> Copy
       </button>
-      <button class="secondary-btn" onclick="editSnippet('${snippet.id}')">
+      <button class="secondary-btn edit-btn" onclick="editSnippet('${snippet.id}')">
         <i class="fas fa-edit"></i> Edit
       </button>
-      <button class="secondary-btn" onclick="deleteSnippet('${snippet.id}')">
+      <button class="secondary-btn delete-btn" onclick="deleteSnippet('${snippet.id}')">
         <i class="fas fa-trash"></i> Delete
       </button>
     </div>
@@ -180,6 +224,7 @@ function handleDragEnd(e) {
   this.classList.remove('dragging');
   document.querySelectorAll('.snippet-card.drag-over').forEach(card => card.classList.remove('drag-over'));
 }
+
 
 function updateCategoryList() {
   // Get unique categories
@@ -338,11 +383,18 @@ function togglePin(id) {
   }
 }
 
+function saveSnippetsToStorage() {
+  localStorage.setItem('codeSnippets', JSON.stringify(snippets));
+}
+
 function copyToClipboard(id) {
   const snippet = snippets.find(s => s.id === id);
   if (snippet) {
     navigator.clipboard.writeText(snippet.code)
       .then(() => {
+        // Show success toast!
+        showToast('Snippet copied to clipboard!', 'success');
+        
         // Optional: Show feedback to user
         const button = document.querySelector(`.snippet-card button[onclick="copyToClipboard('${id}')"]`);
         const originalText = button.innerHTML;
@@ -356,7 +408,8 @@ function copyToClipboard(id) {
       })
       .catch(err => {
         console.error('Failed to copy: ', err);
-        alert('Failed to copy code to clipboard');
+        // Replace alert with error toast
+        showToast('Failed to copy code to clipboard', 'error');
       });
   }
 }
@@ -365,6 +418,82 @@ function copyToClipboard(id) {
 window.editSnippet = editSnippet;
 window.deleteSnippet = deleteSnippet; 
 window.copyToClipboard = copyToClipboard;
+window.exportToGist = exportToGist;
+
+function getGitHubToken() {
+  let token = localStorage.getItem('github_pat');
+  if (!token) {
+    token = prompt("Please enter your GitHub Personal Access Token (with 'gist' permissions):");
+    if (token) {
+      localStorage.setItem('github_pat', token);
+    }
+  }
+  return token;
+}
+
+async function exportToGist(id) {
+  const snippet = snippets.find(s => s.id === id);
+  if (!snippet) return;
+
+  const token = getGitHubToken();
+  if (!token) return; // Stop if the user cancels the prompt
+
+  const button = document.getElementById(`gist-btn-${id}`);
+  const originalText = button.innerHTML;
+  button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+  button.disabled = true;
+
+  const gistData = {
+    description: `CodeVault Snippet: ${snippet.title}`,
+    public: false, // Creates a secret gist
+    files: {
+      [`${snippet.title.replace(/\s+/g, '_')}.txt`]: {
+        content: snippet.code
+      }
+    }
+  };
+
+  try {
+    const response = await fetch('https://api.github.com/gists', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(gistData)
+    });
+
+    if (!response.ok) throw new Error('Failed to create Gist');
+
+    const data = await response.json();
+    
+    // UI Feedback
+    button.innerHTML = '<i class="fas fa-check"></i> Created!';
+    button.style.backgroundColor = '#28a745'; 
+    button.style.color = '#ffffff';
+    button.style.borderColor = '#28a745';
+    
+    // Show success toast!
+    showToast('Gist successfully created!', 'success');
+    
+    // Open the new Gist in a new tab
+    window.open(data.html_url, '_blank');
+    
+  } catch (error) {
+    console.error(error);
+    // Replace alert with error toast
+    showToast('Error creating Gist. Please check your token permissions or network connection.', 'error');
+  } finally {
+    setTimeout(() => {
+      button.innerHTML = originalText;
+      button.style.backgroundColor = '';
+      button.style.color = '';
+      button.style.borderColor = '';
+      button.disabled = false;
+    }, 3000);
+  }
+}
 
 const previewModal = document.getElementById('preview-modal-overlay');
 const previewCode = document.getElementById('preview-code');
@@ -372,20 +501,20 @@ const closePreviewBtn = document.getElementById('close-preview-modal');
 
 function openPreview(code) {
   previewCode.textContent = code;
-  // highlight.js skips elements it has already highlighted
-  delete previewCode.dataset.highlighted;
   hljs.highlightElement(previewCode);
-  previewModal.classList.add('active');
+  previewModal.style.display = 'flex';
 }
 
-closePreviewBtn.addEventListener('click', () => {
-  previewModal.classList.remove('active');
-});
+// Only add the click listener if the button actually exists in the HTML
+if (closePreviewBtn) {
+  closePreviewBtn.addEventListener('click', () => {
+    previewModal.style.display = 'none';
+  });
+}
 
 document.getElementById('snippets-grid').addEventListener('click', (e) => {
   const snippetCard = e.target.closest('.snippet-card');
-  // Card buttons (pin, copy, edit, delete) have their own actions
-  if (!snippetCard || e.target.closest('button')) return;
+  if (!snippetCard) return;
   const code = snippetCard.querySelector('pre') ? snippetCard.querySelector('pre').textContent : '';
   if(code) openPreview(code);
 });
