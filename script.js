@@ -124,6 +124,12 @@ function renderSnippets() {
       <pre><code class="language-${snippet.category.toLowerCase()}">${escapeHtml(snippet.code)}</code></pre>
     </div>
     <div class="snippet-actions">
+      <button class="secondary-btn" onclick="deleteSnippet('${snippet.id}')">
+        <i class="fas fa-trash"></i> Delete
+      </button>
+      <button class="secondary-btn gist-btn" onclick="exportToGist('${snippet.id}')">
+        <i class="fas fa-code-branch"></i> Share to Gist
+      </button>
       <button class="secondary-btn copy-btn" onclick="copyToClipboard('${snippet.id}')">
         <i class="fas fa-copy"></i> Copy
       </button>
@@ -364,11 +370,66 @@ function copyToClipboard(id) {
       });
   }
 }
+async function exportToGist(id) {
+  const snippet = snippets.find(s => s.id === id);
+  if (!snippet) return;
+
+  let token = localStorage.getItem('githubPAT');
+  if (!token) {
+    token = prompt('Enter your GitHub Personal Access Token (needs "gist" scope):');
+    if (!token) return;
+    localStorage.setItem('githubPAT', token);
+  }
+
+  const button = document.querySelector(`.snippet-card button[onclick="exportToGist('${id}')"]`);
+  const originalText = button.innerHTML;
+  button.disabled = true;
+  button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+
+  try {
+    const response = await fetch('https://api.github.com/gists', {
+      method: 'POST',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github+json'
+      },
+      body: JSON.stringify({
+        description: snippet.title,
+        public: false,
+        files: {
+          [`${snippet.title.replace(/\s+/g, '_')}.${snippet.category.toLowerCase()}`]: {
+            content: snippet.code
+          }
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`GitHub API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    button.innerHTML = '<i class="fas fa-check"></i> Gist Created!';
+    showToast('Gist created successfully', 'success');
+    window.open(data.html_url, '_blank');
+
+    setTimeout(() => {
+      button.innerHTML = originalText;
+      button.disabled = false;
+    }, 3000);
+  } catch (err) {
+    console.error('Failed to create gist:', err);
+    showToast('Failed to create Gist', 'error');
+    button.innerHTML = originalText;
+    button.disabled = false;
+  }
+}
 
 // Make functions available globally for onclick handlers
 window.editSnippet = editSnippet;
 window.deleteSnippet = deleteSnippet; 
 window.copyToClipboard = copyToClipboard;
+window.exportToGist = exportToGist;
 
 const previewModal = document.getElementById('preview-modal-overlay');
 const previewCode = document.getElementById('preview-code');
